@@ -189,49 +189,54 @@ class YouTrackMCPServer:
         # LLMs prefer concise, action-oriented descriptions
         clean_description = description.strip()
 
-        # Add ONE clear example if we have parameters
-        sig = inspect.signature(func)
-        parameters = [p for p in sig.parameters.values() if p.name != "self"]
+        # Check if description already contains an explicit example
+        # (from enhanced tool definitions using create_enhanced_tool_description)
+        has_explicit_example = "Example:" in clean_description
 
-        if parameters:
-            # Create a single, concrete example
-            example_params = []
-            for param in parameters:
-                if param.default != inspect.Parameter.empty:
-                    continue  # Skip optional params in example
+        # Add ONE clear example if we have parameters and no explicit example
+        if not has_explicit_example:
+            sig = inspect.signature(func)
+            parameters = [p for p in sig.parameters.values() if p.name != "self"]
 
-                param_desc = parameter_descriptions.get(param.name, "")
-                if "DEMO" in param_desc or "PROJECT" in param_desc:
-                    example_params.append(f'{param.name}="DEMO-123"')
-                elif "project" in param.name.lower():
-                    example_params.append(f'{param.name}="DEMO"')
-                elif "user" in param.name.lower():
-                    example_params.append(f'{param.name}="admin"')
-                elif "query" in param.name.lower():
-                    example_params.append(
-                        f'{param.name}="project: DEMO #Unresolved"'
+            if parameters:
+                # Create a single, concrete example
+                example_params = []
+                for param in parameters:
+                    if param.default != inspect.Parameter.empty:
+                        continue  # Skip optional params in example
+
+                    param_desc = parameter_descriptions.get(param.name, "")
+                    if "DEMO" in param_desc or "PROJECT" in param_desc:
+                        example_params.append(f'{param.name}="DEMO-123"')
+                    elif "project" in param.name.lower():
+                        example_params.append(f'{param.name}="DEMO"')
+                    elif "user" in param.name.lower():
+                        example_params.append(f'{param.name}="admin"')
+                    elif "query" in param.name.lower():
+                        example_params.append(
+                            f'{param.name}="project: DEMO #Unresolved"'
+                        )
+                    elif (
+                        "text" in param.name.lower()
+                        or "comment" in param.name.lower()
+                    ):
+                        example_params.append(f'{param.name}="This is fixed"')
+                    elif (
+                        "title" in param.name.lower()
+                        or "summary" in param.name.lower()
+                    ):
+                        example_params.append(f'{param.name}="Bug report"')
+                    elif "description" in param.name.lower():
+                        example_params.append(
+                            f'{param.name}="Detailed description"'
+                        )
+                    else:
+                        example_params.append(f'{param.name}="value"')
+
+                if example_params:
+                    clean_description += (
+                        f"\n\nExample: {name}({', '.join(example_params)})"
                     )
-                elif (
-                    "text" in param.name.lower()
-                    or "comment" in param.name.lower()
-                ):
-                    example_params.append(f'{param.name}="This is fixed"')
-                elif (
-                    "title" in param.name.lower()
-                    or "summary" in param.name.lower()
-                ):
-                    example_params.append(f'{param.name}="Bug report"')
-                elif "description" in param.name.lower():
-                    example_params.append(
-                        f'{param.name}="Detailed description"'
-                    )
-                else:
-                    example_params.append(f'{param.name}="value"')
-
-            if example_params:
-                clean_description += (
-                    f"\n\nExample: {name}({', '.join(example_params)})"
-                )
 
         # Store schema in the wrapped function for access later
         wrapped_func.tool_schema = schema
@@ -905,15 +910,23 @@ class YouTrackMCPServer:
         )
 
         for name, func in new_tools.items():
-            # Get function metadata
-            description = func.__doc__ or f"Tool {name}"
-
-            # For wrapped functions, try to get the original docstring
-            if hasattr(func, "__wrapped__"):
-                description = func.__wrapped__.__doc__ or description
-
-            # Extract first line as description
-            description = description.strip().split("\n")[0]
+            # Try to get enhanced description from tool_definition attribute first
+            description = None
+            parameter_descriptions = None
+            
+            if hasattr(func, 'tool_definition'):
+                tool_def = func.tool_definition
+                description = tool_def.get('description')
+                parameter_descriptions = tool_def.get('parameter_descriptions')
+            
+            # Fallback to docstring if no tool_definition
+            if not description:
+                description = func.__doc__ or f"Tool {name}"
+                # For wrapped functions, try to get the original docstring
+                if hasattr(func, "__wrapped__"):
+                    description = func.__wrapped__.__doc__ or description
+                # Extract first line as description
+                description = description.strip().split("\n")[0]
 
             # Determine if this tool should use streaming
             # For now, assume all tools except Issue tools can stream
@@ -936,6 +949,7 @@ class YouTrackMCPServer:
                 name=name,
                 func=func,
                 description=description,
+                parameter_descriptions=parameter_descriptions,  # Pass the enhanced parameter descriptions
                 should_stream=should_stream,
             )
 

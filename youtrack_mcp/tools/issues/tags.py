@@ -18,7 +18,7 @@ from typing import Any, Dict, List, Optional
 from youtrack_mcp.api.issues import IssuesClient
 from youtrack_mcp.api.projects import ProjectsClient
 from youtrack_mcp.mcp_wrappers import sync_wrapper
-from youtrack_mcp.utils import format_json_response
+from youtrack_mcp.utils import format_json_response, create_enhanced_tool_description
 
 logger = logging.getLogger(__name__)
 
@@ -237,10 +237,16 @@ class Tags:
                 }
             },
             "add_tag_to_issue": {
-                "description": "Add a tag to an issue by tag name. Example: add_tag_to_issue(issue_id='DEMO-123', tag_name='deploy')",
+                "description": create_enhanced_tool_description(
+                    action="Add a tag to an issue by tag name",
+                    use_when="Need to label/categorize issue with tags like 'refinement', 'urgent', 'deploy', or custom workflow labels",
+                    returns="Tag object indicating success with updated issue data showing the new tag added to the issue",
+                    important="Tag must already exist in YouTrack. Use exact tag name (case-sensitive). Tag is added, not replaced - existing tags remain.",
+                    example='add_tag_to_issue(issue_id="AI-2375", tag_name="refinement")'
+                ),
                 "parameter_descriptions": {
-                    "issue_id": "Issue identifier like 'DEMO-123' or 'PROJECT-456'",
-                    "tag_name": "Name of the tag to add (e.g., 'deploy', 'urgent', 'bug')"
+                    "issue_id": "Full issue identifier like 'AI-2375' or 'DEMO-123' (format: PROJECT-NUMBER)",
+                    "tag_name": "Exact tag name to add (e.g., 'refinement', 'urgent', 'deploy'). Tag must exist in YouTrack. Use get_available_tags() to see options."
                 }
             },
             "remove_tag_from_issue": {

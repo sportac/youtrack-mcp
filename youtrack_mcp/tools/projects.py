@@ -10,7 +10,7 @@ from youtrack_mcp.api.client import YouTrackClient
 from youtrack_mcp.api.issues import IssuesClient
 from youtrack_mcp.api.projects import ProjectsClient
 from youtrack_mcp.mcp_wrappers import sync_wrapper
-from youtrack_mcp.utils import format_json_response
+from youtrack_mcp.utils import format_json_response, create_enhanced_tool_description
 
 logger = logging.getLogger(__name__)
 
@@ -708,9 +708,15 @@ class ProjectTools:
                 },
             },
             "get_custom_fields": {
-                "description": 'Get custom field definitions for a specific project. Example: get_custom_fields(project_id="DEMO")',
+                "description": create_enhanced_tool_description(
+                    action="Get all custom field definitions for a specific project",
+                    use_when="Need to see all available custom fields and their types (Type, Priority, State, Team, etc.) before working with issue fields",
+                    returns="List of custom field IDs, names, and types (enum, state, user, date, etc.) configured for the project",
+                    important="Use project SHORT NAME like 'AI' or 'DEMO', not the full project name. Returns field metadata, not values.",
+                    example='get_custom_fields(project_id="AI")'
+                ),
                 "parameter_descriptions": {
-                    "project_id": "Project identifier like 'DEMO'"
+                    "project_id": "Project SHORT NAME like 'AI', 'DEMO' (not full project name). Use get_projects() to see available projects."
                 },
             },
             "create_project": {
@@ -741,10 +747,16 @@ class ProjectTools:
                 },
             },
             "get_custom_field_allowed_values": {
-                "description": 'Get allowed values for enum/state custom fields in a project. Example: get_custom_field_allowed_values(project_id="DEMO", field_name="Priority")',
+                "description": create_enhanced_tool_description(
+                    action="Get allowed values for enum/state custom fields in a project",
+                    use_when="Need to see valid options before setting field values like Type, Priority, State, or Team. Essential for validating values before update.",
+                    returns="List of allowed values with name, id, and description for each option. Each value shows exactly what can be used in updates.",
+                    important="Use project SHORT NAME like 'AI' not full name. Field name is case-sensitive (e.g., 'Type' not 'type'). Only works for enum/state fields.",
+                    example='get_custom_field_allowed_values(project_id="AI", field_name="Type")'
+                ),
                 "parameter_descriptions": {
-                    "project_id": "Project identifier like 'DEMO' or '0-0'",
-                    "field_name": "Custom field name like 'Priority' or 'State'"
+                    "project_id": "Project SHORT NAME like 'AI', 'DEMO' (not full project name). Use get_projects() if unknown.",
+                    "field_name": "Custom field name like 'Type', 'Priority', 'Team', 'State' (case-sensitive). Use get_custom_fields() to see available fields."
                 },
             },
             "get_all_custom_fields_schemas": {

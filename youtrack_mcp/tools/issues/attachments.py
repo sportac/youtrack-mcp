@@ -16,7 +16,7 @@ import logging
 from typing import Any, Dict
 
 from youtrack_mcp.mcp_wrappers import sync_wrapper
-from youtrack_mcp.utils import format_json_response
+from youtrack_mcp.utils import format_json_response, create_enhanced_tool_description
 
 logger = logging.getLogger(__name__)
 
@@ -111,9 +111,15 @@ class Attachments:
         """Get tool definitions for attachment functions."""
         return {
             "get_issue_raw": {
-                "description": "Get comprehensive raw issue data bypassing Pydantic models, including all fields, custom fields, attachments, and comments. Useful for detailed data analysis or when structured models are insufficient. Example: get_issue_raw(issue_id='DEMO-123')",
+                "description": create_enhanced_tool_description(
+                    action="Get raw issue data with full customFields values and complete details",
+                    use_when="Need detailed custom field values with IDs and metadata, or want complete unfiltered issue data including attachments and comments",
+                    returns="Raw issue object with full customFields showing value details (id, name for each), attachments array, comments array, and all metadata",
+                    important="Use for detailed field inspection. Returns more data than get_issue(). Use full issue ID format like 'AI-2375'.",
+                    example='get_issue_raw(issue_id="AI-2375")'
+                ),
                 "parameter_descriptions": {
-                    "issue_id": "Issue identifier like 'DEMO-123' or 'PROJECT-456'"
+                    "issue_id": "Full issue identifier like 'AI-2375' or 'DEMO-123' (format: PROJECT-NUMBER)"
                 }
             },
             "get_attachment_content": {

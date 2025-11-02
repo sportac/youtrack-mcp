@@ -1,27 +1,29 @@
 # YouTrack MCP Server Makefile
 # Provides convenient commands for building and testing
 
-.PHONY: help build test-create test-update get-issue clean
+.PHONY: help build test test-unit test-integration test-all test-e2e test-manual clean images
 
 # Default target
 help:
 	@echo "YouTrack MCP Server Commands:"
 	@echo ""
 	@echo "Build Commands:"
-	@echo "  build          - Build Docker image with latest code changes"
-	@echo "  clean          - Remove Docker images"
+	@echo "  build             - Build Docker image with latest code changes"
+	@echo "  clean             - Remove Docker images"
+	@echo "  images            - Show current Docker images"
 	@echo ""
 	@echo "Test Commands:"
-	@echo "  test-create    - Create a test issue with default data"
-	@echo "  test-update     - Update custom field (usage: make test-update ID=DEMO-50 FIELD=Component VALUE=Python)"
-	@echo "  get-issue      - Get issue details (usage: make get-issue ID=DEMO-50)"
+	@echo "  test              - Run unit tests (fast, default)"
+	@echo "  test-unit         - Run unit tests only"
+	@echo "  test-integration  - Run integration tests"
+	@echo "  test-all          - Run all tests (unit + integration)"
+	@echo "  test-e2e          - Run end-to-end tests (requires YouTrack credentials)"
+	@echo "  test-manual       - Interactive manual testing via mcp-tools-cli"
 	@echo ""
 	@echo "Examples:"
-	@echo "  make build"
-	@echo "  make test-create"
-	@echo "  make get-issue ID=DEMO-50"
-	@echo "  make test-update ID=DEMO-50 FIELD=Component VALUE=Python"
-	@echo "  make test-update ID=DEMO-51 FIELD=Priority VALUE=High"
+	@echo "  make build        # Build Docker image"
+	@echo "  make test         # Run unit tests"
+	@echo "  make test-all     # Run all tests"
 
 # Build Docker image with latest code changes
 build:
@@ -29,42 +31,44 @@ build:
 	docker build -t youtrack-mcp:latest .
 	@echo "✅ Build complete! Image tagged as youtrack-mcp:latest"
 
-# Create a test issue with default data
-test-create:
-	@echo "📝 Creating test issue with default data..."
-	mcp-tools-cli --config mcp_config.json --mcp-name youtrack call-tool --tool-name create_issue --tool-args '{"args": "DEMO", "kwargs": "{\"summary\": \"Test Issue Created via Makefile\", \"description\": \"This is a test issue created using the Makefile command. It includes default data for testing purposes.\"}"}'
+# Run unit tests (default test command)
+test: test-unit
 
-# Get issue details by ID
-# Usage: make get-issue ID=DEMO-50
-get-issue:
-	@if [ -z "$(ID)" ]; then \
-		echo "❌ Error: ID parameter is required"; \
-		echo "Usage: make get-issue ID=DEMO-50"; \
-		exit 1; \
-	fi
-	@echo "📋 Getting details for issue '$(ID)'..."
-	mcp-tools-cli --config mcp_config.json --mcp-name youtrack call-tool --tool-name get_issue --tool-args '{"args": "$(ID)", "kwargs": "{}"}'
+# Run unit tests only
+test-unit:
+	@echo "🧪 Running unit tests..."
+	pytest tests/unit -m unit -v --tb=short
+	@echo "✅ Unit tests completed"
 
-# Update custom field on an issue
-# Usage: make test-update ID=DEMO-50 FIELD=Component VALUE=Python
-test-update:
-	@if [ -z "$(ID)" ]; then \
-		echo "❌ Error: ID parameter is required"; \
-		echo "Usage: make test-update ID=DEMO-50 FIELD=Component VALUE=Python"; \
-		exit 1; \
+# Run integration tests
+test-integration:
+	@echo "🧪 Running integration tests..."
+	pytest tests/integration -m integration -v --tb=short
+	@echo "✅ Integration tests completed"
+
+# Run all tests (unit + integration)
+test-all:
+	@echo "🧪 Running all tests (unit + integration)..."
+	pytest tests/unit tests/integration -v --tb=short
+	@echo "✅ All tests completed"
+
+# Run end-to-end tests (requires credentials)
+test-e2e:
+	@echo "🧪 Running end-to-end tests..."
+	@echo "⚠️  Note: E2E tests require YOUTRACK_URL and YOUTRACK_API_TOKEN environment variables"
+	@if [ -f .env ]; then \
+		echo "📁 Loading environment variables from .env file..."; \
+		export $$(cat .env | grep -v '^#' | xargs) && pytest tests/e2e -m e2e -v --tb=short; \
+	else \
+		echo "⚠️  .env file not found, using existing environment variables"; \
+		pytest tests/e2e -m e2e -v --tb=short; \
 	fi
-	@if [ -z "$(FIELD)" ]; then \
-		echo "❌ Error: FIELD parameter is required"; \
-		echo "Usage: make test-update ID=DEMO-50 FIELD=Component VALUE=Python"; \
-		exit 1; \
-	fi
-	@if [ -z "$(VALUE)" ]; then \
-		echo "❌ Error: VALUE parameter is required"; \
-		echo "Usage: make test-update ID=DEMO-50 FIELD=Component VALUE=Python"; \
-		exit 1; \
-	fi
-	@echo "🔧 Updating custom field '$(FIELD)' to '$(VALUE)' on issue '$(ID)'..."
-	mcp-tools-cli --config mcp_config.json --mcp-name youtrack call-tool --tool-name update_custom_fields --tool-args '{"args": "$(ID)", "kwargs": "{\"custom_fields\": {\"$(FIELD)\": \"$(VALUE)\"}}"}'
+	@echo "✅ E2E tests completed"
+
+# Run interactive manual testing script
+test-manual:
+	@echo "🧪 Starting interactive manual testing..."
+	@./scripts/manual_test.sh
 
 # Clean up Docker images
 clean:

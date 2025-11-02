@@ -16,7 +16,7 @@ import logging
 from typing import Any, Dict, List
 
 from youtrack_mcp.mcp_wrappers import sync_wrapper
-from youtrack_mcp.utils import format_json_response
+from youtrack_mcp.utils import format_json_response, create_enhanced_tool_description
 
 logger = logging.getLogger(__name__)
 
@@ -326,11 +326,17 @@ class CustomFields:
         """Get tool definitions for custom field functions."""
         return {
             "update_custom_fields": {
-                "description": "Update custom fields on an issue with comprehensive validation. Use proven simple string formats: Priority='Critical', State='In Progress', Assignee='admin'. Example: update_custom_fields(issue_id='DEMO-123', custom_fields={'Priority': 'Critical', 'Assignee': 'admin'})",
+                "description": create_enhanced_tool_description(
+                    action="Update custom fields on an issue with comprehensive validation",
+                    use_when="Need to update multiple custom fields at once (Type, Priority, Team, etc.) or when specific dedicated update functions aren't available",
+                    returns="Success status with updated issue data showing all modified fields. Indicates which fields were updated successfully.",
+                    important="Use simple string values: {'Team': 'Python', 'Priority': 'Critical'}. Field names are case-sensitive. Values must match allowed options exactly.",
+                    example='update_custom_fields(issue_id="AI-2375", custom_fields={"Team": "Python", "Priority": "High"})'
+                ),
                 "parameter_descriptions": {
-                    "issue_id": "Issue identifier like 'DEMO-123' or 'PROJECT-456'",
-                    "custom_fields": "Dictionary of field name-value pairs using simple string formats",
-                    "validate": "Whether to validate field values (default: True)"
+                    "issue_id": "Full issue identifier like 'AI-2375' or 'DEMO-123' (format: PROJECT-NUMBER)",
+                    "custom_fields": "Dictionary of field name-value pairs. Example: {'Team': 'Python', 'Priority': 'Critical'}. Use get_custom_field_allowed_values() to verify values.",
+                    "validate": "Whether to validate field values before updating (default: True). Recommended to keep enabled."
                 }
             },
             "batch_update_custom_fields": {
@@ -356,10 +362,16 @@ class CustomFields:
                 }
             },
             "get_available_custom_field_values": {
-                "description": "Get available values for enum/state custom fields to see what values are allowed. Example: get_available_custom_field_values(project_id='DEMO', field_name='Priority')",
+                "description": create_enhanced_tool_description(
+                    action="Get available values for enum/state custom fields to see what values are allowed",
+                    use_when="Need to validate field values before update, check available Type/Priority/Team options, or show user what choices exist",
+                    returns="List of allowed values (similar to get_custom_field_allowed_values). Each value includes name, id, and description if available.",
+                    important="Use project SHORT NAME like 'AI' not full name. Field name is case-sensitive. Only works for enum/state fields like Type, Priority, Team.",
+                    example='get_available_custom_field_values(project_id="AI", field_name="Type")'
+                ),
                 "parameter_descriptions": {
-                    "project_id": "Project identifier like 'DEMO' or '0-0'",
-                    "field_name": "Custom field name like 'Priority', 'State', 'Type'"
+                    "project_id": "Project SHORT NAME like 'AI', 'DEMO' (not full project name). Use get_projects() if unknown.",
+                    "field_name": "Custom field name like 'Type', 'Priority', 'Team', 'State' (case-sensitive). Use get_custom_fields() to see available fields."
                 }
             }
         } 

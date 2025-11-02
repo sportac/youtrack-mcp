@@ -17,7 +17,7 @@ import logging
 from typing import Any, Dict, Optional
 
 from youtrack_mcp.mcp_wrappers import sync_wrapper
-from youtrack_mcp.utils import format_json_response
+from youtrack_mcp.utils import format_json_response, create_enhanced_tool_description
 
 logger = logging.getLogger(__name__)
 
@@ -272,9 +272,15 @@ class BasicOperations:
         """Get tool definitions for basic operation functions."""
         return {
             "get_issue": {
-                "description": "Get complete information about a YouTrack issue including custom fields and metadata. Returns comprehensive issue data with project, reporter, assignee, and custom field details. Example: get_issue(issue_id='DEMO-123')",
+                "description": create_enhanced_tool_description(
+                    action="Get complete information about a YouTrack issue",
+                    use_when="Need to retrieve issue details, check current field values, or verify issue exists before making changes",
+                    returns="Issue object in JSON format with id, idReadable (e.g., 'AI-2375'), summary, description, project info, reporter, assignee, and basic customFields",
+                    important="Use full issue ID format like 'AI-2375' or 'DEMO-123' (PROJECT-NUMBER). For detailed custom field values use get_issue_raw() instead.",
+                    example='get_issue(issue_id="AI-2375")'
+                ),
                 "parameter_descriptions": {
-                    "issue_id": "Issue identifier like 'DEMO-123' or 'PROJECT-456'"
+                    "issue_id": "Full issue identifier like 'AI-2375' or 'DEMO-123' (format: PROJECT-NUMBER)"
                 }
             },
             "search_issues": {
@@ -285,11 +291,17 @@ class BasicOperations:
                 }
             },
             "create_issue": {
-                "description": "Create a new issue in YouTrack with automatic project validation. Accepts both project short names (DEMO) and project IDs (0-1). Example: create_issue(project='DEMO', summary='Bug in login', description='Users cannot log in')",
+                "description": create_enhanced_tool_description(
+                    action="Create a new issue in YouTrack with automatic project validation",
+                    use_when="User wants to report bug, create task, add work item, or document new requirement. Use after confirming project exists.",
+                    returns="Full issue object with id, idReadable (e.g., 'AI-2375'), summary, description, and customFields. The idReadable is the issue ID to use for updates.",
+                    important="Use project SHORT NAME like 'AI' or 'DEMO' not full name. Summary is required. Returns immediately with new issue ID for follow-up actions.",
+                    example='create_issue(project="AI", summary="Login fails on mobile", description="Users see no response when clicking login button")'
+                ),
                 "parameter_descriptions": {
-                    "project": "Project identifier (short name like 'DEMO' or ID like '0-1')",
-                    "summary": "Issue title/summary (required)",
-                    "description": "Detailed description of the issue (optional)"
+                    "project": "Project SHORT NAME like 'AI', 'DEMO' (not full project name). Use get_projects() if unknown.",
+                    "summary": "Brief issue title (required). Example: 'Login button not working'",
+                    "description": "Optional detailed description, steps to reproduce, or additional context"
                 }
             },
             "update_issue": {

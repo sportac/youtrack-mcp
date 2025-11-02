@@ -17,7 +17,7 @@ import logging
 from typing import Any, Dict
 
 from youtrack_mcp.mcp_wrappers import sync_wrapper
-from youtrack_mcp.utils import format_json_response
+from youtrack_mcp.utils import format_json_response, create_enhanced_tool_description
 
 logger = logging.getLogger(__name__)
 
@@ -585,10 +585,16 @@ class DedicatedUpdates:
                 }
             },
             "update_issue_type": {
-                "description": "Update an issue's type using the proven working REST API approach. Example: update_issue_type(issue_id='DEMO-123', issue_type='Bug')",
+                "description": create_enhanced_tool_description(
+                    action="Update an issue's type using the proven working REST API approach",
+                    use_when="Need to change issue classification (Bug → Task, Feature → Story, etc.). Use after creating issue or when reclassifying existing work.",
+                    returns="Success status with updated issue data including the new type value",
+                    important="Type value must match exactly (case-sensitive). May fail if value not in allowed list. Check allowed values first with get_custom_field_allowed_values().",
+                    example='update_issue_type(issue_id="AI-2375", issue_type="Task")'
+                ),
                 "parameter_descriptions": {
-                    "issue_id": "Issue identifier like 'DEMO-123' or 'PROJECT-456'",
-                    "issue_type": "The issue type (e.g., 'Bug', 'Feature', 'Task', 'Story')"
+                    "issue_id": "Full issue identifier like 'AI-2375' or 'DEMO-123' (format: PROJECT-NUMBER)",
+                    "issue_type": "Issue type name like 'Bug', 'Feature', 'Task', 'Story' (case-sensitive, must be in project's allowed values)"
                 }
             },
             "update_issue_estimation": {

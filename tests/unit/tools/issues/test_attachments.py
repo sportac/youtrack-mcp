@@ -377,7 +377,8 @@ class TestAttachments:
         raw_def = definitions["get_issue_raw"]
         assert "issue_id" in raw_def["parameter_descriptions"]
         assert "raw issue data" in raw_def["description"].lower()
-        assert "pydantic" in raw_def["description"].lower()
+        # Check for enhanced description format
+        assert "detailed" in raw_def["description"].lower() or "metadata" in raw_def["description"].lower()
         
         attachment_def = definitions["get_attachment_content"]
         assert "issue_id" in attachment_def["parameter_descriptions"]

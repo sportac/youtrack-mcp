@@ -85,3 +85,45 @@ def format_json_response(data: Any) -> str:
 
     # Return formatted JSON
     return json.dumps(enhanced_data, indent=2)
+
+
+def create_enhanced_tool_description(
+    action: str,
+    use_when: str,
+    returns: str,
+    important: str,
+    example: str
+) -> str:
+    """
+    Generate consistent enhanced tool description for MCP tools.
+    
+    Creates a lightweight but comprehensive description that helps LLM agents
+    use tools correctly on the first try by providing clear usage context,
+    expected returns, and concrete examples.
+    
+    Args:
+        action: Brief action-oriented summary of what the tool does
+        use_when: Specific situations when this tool should be used
+        returns: What the agent receives back from the tool
+        important: Critical notes about format, common mistakes, or requirements
+        example: Concrete usage example with actual parameter values
+    
+    Returns:
+        Formatted tool description string with emojis for visual scanning
+    
+    Example:
+        >>> create_enhanced_tool_description(
+        ...     action="Get allowed values for a custom field",
+        ...     use_when="Need to see valid options before setting field values",
+        ...     returns="List of allowed values with name, id, and description",
+        ...     important="Use project SHORT NAME like 'AI' not full name",
+        ...     example='get_custom_field_allowed_values(project_id="AI", field_name="Type")'
+        ... )
+    """
+    return f"""{action}
+
+🎯 USE WHEN: {use_when}
+✅ RETURNS: {returns}
+⚠️ IMPORTANT: {important}
+
+Example: {example}"""
