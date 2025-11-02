@@ -25,6 +25,7 @@ from .custom_fields import CustomFields
 from .basic_operations import BasicOperations
 from .linking import Linking
 from .attachments import Attachments
+from .tags import Tags
 from .utilities import Utilities
 
 logger = logging.getLogger(__name__)
@@ -52,6 +53,7 @@ class IssueTools:
         self.basic_operations = BasicOperations(self.issues_api, self.projects_api)
         self.linking = Linking(self.issues_api, self.projects_api)
         self.attachments = Attachments(self.issues_api, self.projects_api)
+        self.tags = Tags(self.issues_api, self.projects_api)
         self.utilities = Utilities(self.issues_api, self.projects_api)
         
         logger.info("IssueTools initialized with modular components")
@@ -180,6 +182,36 @@ class IssueTools:
     def get_attachment_content(self, issue_id: str, attachment_id: str) -> str:
         """Get attachment content as base64."""
         return self.attachments.get_attachment_content(issue_id, attachment_id)
+
+    # === Tag Functions ===
+    
+    def get_available_tags(self, query: Optional[str] = None, limit: int = 50) -> str:
+        """Get all available tags that are owned by or shared with the current user."""
+        return self.tags.get_available_tags(query, limit)
+    
+    def get_issue_tags(self, issue_id: str) -> str:
+        """Get all tags currently assigned to an issue."""
+        return self.tags.get_issue_tags(issue_id)
+    
+    def add_tag_to_issue(self, issue_id: str, tag_name: str) -> str:
+        """Add a tag to an issue by tag name."""
+        return self.tags.add_tag_to_issue(issue_id, tag_name)
+    
+    def remove_tag_from_issue(self, issue_id: str, tag_name: str) -> str:
+        """Remove a specific tag from an issue by tag name."""
+        return self.tags.remove_tag_from_issue(issue_id, tag_name)
+    
+    def set_issue_tags(self, issue_id: str, tag_names: List[str]) -> str:
+        """Set all tags for an issue (replaces existing tags)."""
+        return self.tags.set_issue_tags(issue_id, tag_names)
+    
+    def remove_all_tags_from_issue(self, issue_id: str) -> str:
+        """Remove all tags from an issue."""
+        return self.tags.remove_all_tags_from_issue(issue_id)
+    
+    def find_tag_by_name(self, tag_name: str) -> str:
+        """Find a tag by its name."""
+        return self.tags.find_tag_by_name(tag_name)
 
     # === Utility Functions ===
     

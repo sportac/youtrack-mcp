@@ -63,6 +63,22 @@ update_issue_estimation("TASK-791", "3d 5h")  # 3 days 5 hours
 # update_custom_fields(issue_id, {"Estimation": "PT4H"})             # FAILS
 ```
 
+### **🏷️ Tag Management (NEW!)**
+```python
+# ✅ PROVEN WORKING FORMAT - Use tag names
+get_available_tags()                           # List all available tags
+get_issue_tags("DEMO-123")                    # Get tags for an issue
+add_tag_to_issue("DEMO-123", "deploy")        # Add a tag to an issue
+remove_tag_from_issue("DEMO-123", "deploy")   # Remove a tag from an issue
+set_issue_tags("DEMO-123", ["deploy", "urgent"])  # Set all tags (replaces existing)
+remove_all_tags_from_issue("DEMO-123")        # Remove all tags
+find_tag_by_name("deploy")                    # Find a tag by name
+
+# 🔍 Tag Discovery
+get_available_tags(query="deploy", limit=10)  # Search for tags by name
+get_available_tags(limit=50)                  # Get all available tags
+```
+
 ### **⚡ Complete Issue Workflows**
 ```python
 # 🎯 Complete Triage Workflow
@@ -70,6 +86,7 @@ update_issue_type("DEMO-123", "Bug")           # Classify as bug
 update_issue_priority("DEMO-123", "Critical")  # Set priority  
 update_issue_assignee("DEMO-123", "admin")     # Assign to admin
 update_issue_estimation("DEMO-123", "4h")      # Estimate 4 hours
+add_tag_to_issue("DEMO-123", "urgent")        # Tag as urgent
 update_issue_state("DEMO-123", "In Progress")  # Start work
 add_comment("DEMO-123", "Critical bug triaged and assigned")
 
@@ -78,10 +95,19 @@ update_issue_type("PROJ-456", "Feature")       # Classify as feature
 update_issue_priority("PROJ-456", "Normal")    # Standard priority
 update_issue_assignee("PROJ-456", "jane.doe")  # Assign to developer
 update_issue_estimation("PROJ-456", "2d")      # Estimate 2 days
+set_issue_tags("PROJ-456", ["feature", "enhancement"])  # Tag appropriately
 add_comment("PROJ-456", "Feature ready for development")
+
+# 🚀 Deployment Workflow
+add_tag_to_issue("DEMO-123", "deploy")         # Tag for deployment
+add_tag_to_issue("DEMO-123", "production")     # Tag for production
+update_issue_state("DEMO-123", "Fixed")        # Mark as fixed
+add_comment("DEMO-123", "Ready for deployment")
 
 # ✅ Task Completion Workflow
 update_issue_state("TASK-789", "Fixed")        # Mark as fixed
+remove_tag_from_issue("TASK-789", "in-progress")  # Remove work tag
+add_tag_to_issue("TASK-789", "completed")     # Add completion tag
 add_comment("TASK-789", "Implementation completed and tested")
 
 # 📊 Quick Updates (Most Common)
@@ -235,6 +261,7 @@ npx @tonyzorin/youtrack-mcp
 ## Features
 
 - **Issue Management**: Create, read, update, and delete YouTrack issues
+- **Tag Management**: Add, remove, and manage tags on issues (NEW!)
 - **Project Management**: Access project information and custom fields
 - **Search Capabilities**: Advanced search with filters and custom fields
 - **User Management**: Retrieve user information and permissions

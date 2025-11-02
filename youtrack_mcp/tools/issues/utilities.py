@@ -53,6 +53,7 @@ class Utilities:
             from .basic_operations import BasicOperations
             from .linking import Linking
             from .attachments import Attachments
+            from .tags import Tags
         except ImportError as e:
             logger.error(f"Failed to import issue modules: {e}")
             return {}
@@ -65,6 +66,7 @@ class Utilities:
             BasicOperations(self.issues_api, self.projects_api),
             Linking(self.issues_api, self.projects_api),
             Attachments(self.issues_api, self.projects_api),
+            Tags(self.issues_api, self.projects_api),
         ]
 
         # Consolidate tool definitions from all modules

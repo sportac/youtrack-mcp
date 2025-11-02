@@ -306,7 +306,7 @@ def create_bound_tool(instance: Any, method_name: str) -> Callable:
 
         # Call the method with the processed parameters
         try:
-            return method(**processed_kwargs)
+            return method(*processed_args, **processed_kwargs)
         except Exception as e:
             logger.exception(f"Error calling {method_name}: {str(e)}")
             return json.dumps(

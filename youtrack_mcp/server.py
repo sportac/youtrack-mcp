@@ -51,7 +51,6 @@ class YouTrackMCPServer:
         self.server = ToolServerBase(
             name=config.MCP_SERVER_NAME,
             instructions=config.MCP_SERVER_DESCRIPTION,
-            transport=transport,  # ToolServerBase expects 'transport' parameter
         )
 
         # Initialize tool registry
@@ -461,10 +460,10 @@ class YouTrackMCPServer:
                 # Execute the function with the processed parameters
                 if is_async:
                     result = await self._execute_func_async(
-                        func, processed_kwargs
+                        func, processed_args, processed_kwargs
                     )
                 else:
-                    result = await self._execute_func(func, processed_kwargs)
+                    result = await self._execute_func(func, processed_args, processed_kwargs)
 
                 # Add tool name metadata to help with debugging
                 if isinstance(result, dict):
@@ -639,7 +638,7 @@ class YouTrackMCPServer:
         return real_kwargs
 
     async def _execute_func_async(
-        self, func: Callable, kwargs: Dict[str, Any]
+        self, func: Callable, args: List[Any], kwargs: Dict[str, Any]
     ) -> Any:
         """
         Execute a function asynchronously, regardless of whether it's an async function or not.
@@ -657,10 +656,10 @@ class YouTrackMCPServer:
             is_bound_method = getattr(func, "is_bound_method", False)
 
             # If this is a bound method wrapper created by create_bound_tool,
-            # call it directly with kwargs only
+            # call it directly with args and kwargs
             if is_bound_method:
                 logger.info(
-                    f"Calling bound method {func.__name__} with kwargs: {kwargs}"
+                    f"Calling bound method {func.__name__} with args: {args}, kwargs: {kwargs}"
                 )
 
                 # Get the original function
@@ -669,12 +668,12 @@ class YouTrackMCPServer:
                 # Execute based on whether it's async or not
                 if inspect.iscoroutinefunction(original_func):
                     # It's an async function, await it
-                    result = await func(**kwargs)
+                    result = await func(*args, **kwargs)
                 else:
                     # It's a regular function, run it in an executor to not block
                     loop = asyncio.get_event_loop()
                     result = await loop.run_in_executor(
-                        None, lambda: func(**kwargs)
+                        None, lambda: func(*args, **kwargs)
                     )
 
                 return result
@@ -839,13 +838,13 @@ class YouTrackMCPServer:
 
     # Keep for backward compatibility but mark as deprecated
     async def _execute_func(
-        self, func: Callable, kwargs: Dict[str, Any]
+        self, func: Callable, args: List[Any], kwargs: Dict[str, Any]
     ) -> Any:
         """
-        Execute function with given kwargs.
+        Execute function with given args and kwargs.
         Deprecated: Use _execute_func_async instead.
         """
-        return await self._execute_func_async(func, kwargs)
+        return await self._execute_func_async(func, args, kwargs)
 
     def register_tools(self, tools: Dict[str, Dict[str, Any]]) -> None:
         """

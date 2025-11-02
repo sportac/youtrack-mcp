@@ -1,0 +1,20 @@
+{
+  "mcpServers": {
+    "youtrack": {
+      "command": "docker",
+      "args": [
+        "run", "-i", "--rm",
+        "-e", "YOUTRACK_URL",
+        "-e", "YOUTRACK_API_TOKEN", 
+        "-e", "YOUTRACK_VERIFY_SSL",
+        "youtrack-mcp:latest"
+      ],
+      "env": {
+        "YOUTRACK_URL": "https://your-instance.youtrack.cloud/",
+        "YOUTRACK_VERIFY_SSL": "true",
+        "YOUTRACK_API_TOKEN": "perm:your-api-token-here"
+      }
+    }
+  }
+}
+

@@ -5,6 +5,7 @@
 .env.*.local
 .cursorrules
 .cursor/
+mcp_config.json
 
 # Python
 __pycache__/

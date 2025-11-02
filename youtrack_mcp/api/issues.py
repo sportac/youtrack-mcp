@@ -2833,3 +2833,120 @@ class IssuesClient:
         logger.debug(f"Field '{field_name}' (type: {value_type}, bundle: {bundle_type}) mapped to $type: {field_type}")
         
         return field_type
+
+    # === Tag Management Methods ===
+
+    def get_tags(self, query: Optional[str] = None, limit: int = 50) -> List[Dict[str, Any]]:
+        """
+        Get all available tags that are owned by or shared with the current user.
+        
+        Args:
+            query: Optional query to filter tags by name
+            limit: Maximum number of tags to return
+            
+        Returns:
+            List of tag objects with id, name, and other properties
+        """
+        params = {"$top": limit, "fields": "id,name,owner(id,login,name)"}
+        if query:
+            params["query"] = query
+            
+        response = self.client.get("tags", params=params)
+        return response
+
+    def get_issue_tags(self, issue_id: str) -> List[Dict[str, Any]]:
+        """
+        Get all tags currently assigned to an issue.
+        
+        Args:
+            issue_id: The issue ID (readable or internal)
+            
+        Returns:
+            List of tag objects assigned to the issue
+        """
+        # Get the readable ID for the API call
+        readable_id = self._get_readable_id(issue_id)
+        fields = "id,name,owner(id,login,name)"
+        response = self.client.get(f"issues/{readable_id}?fields=tags({fields})")
+        return response.get("tags", [])
+
+    def add_tag_to_issue(self, issue_id: str, tag_id: str) -> Dict[str, Any]:
+        """
+        Add a tag to an issue.
+        
+        Args:
+            issue_id: The issue ID (readable or internal)
+            tag_id: The tag ID (internal ID only)
+            
+        Returns:
+            The updated issue data with tags
+        """
+        readable_id = self._get_readable_id(issue_id)
+        data = {"id": tag_id}
+        fields = "id,name,owner(id,login,name)"
+        response = self.client.post(f"issues/{readable_id}/tags?fields=tags({fields})", data=data)
+        return response
+
+    def remove_tag_from_issue(self, issue_id: str, tag_id: str) -> bool:
+        """
+        Remove a specific tag from an issue.
+        
+        Args:
+            issue_id: The issue ID (readable or internal)
+            tag_id: The tag ID (internal ID only)
+            
+        Returns:
+            True if the tag was successfully removed
+        """
+        readable_id = self._get_readable_id(issue_id)
+        try:
+            self.client.delete(f"issues/{readable_id}/tags/{tag_id}")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to remove tag {tag_id} from issue {issue_id}: {e}")
+            return False
+
+    def set_issue_tags(self, issue_id: str, tag_ids: List[str]) -> Dict[str, Any]:
+        """
+        Set all tags for an issue (replaces existing tags).
+        
+        Args:
+            issue_id: The issue ID (readable or internal)
+            tag_ids: List of tag IDs to set (internal IDs only)
+            
+        Returns:
+            The updated issue data with tags
+        """
+        readable_id = self._get_readable_id(issue_id)
+        data = {"tags": [{"id": tag_id} for tag_id in tag_ids]}
+        fields = "id,name,owner(id,login,name)"
+        response = self.client.post(f"issues/{readable_id}?fields=tags({fields})", data=data)
+        return response
+
+    def remove_all_tags_from_issue(self, issue_id: str) -> Dict[str, Any]:
+        """
+        Remove all tags from an issue.
+        
+        Args:
+            issue_id: The issue ID (readable or internal)
+            
+        Returns:
+            The updated issue data with empty tags
+        """
+        return self.set_issue_tags(issue_id, [])
+
+    def find_tag_by_name(self, tag_name: str) -> Optional[Dict[str, Any]]:
+        """
+        Find a tag by its name.
+        
+        Args:
+            tag_name: The name of the tag to find
+            
+        Returns:
+            Tag object if found, None otherwise
+        """
+        tags = self.get_tags(query=tag_name, limit=10)
+        for tag in tags:
+            if tag.get("name", "").lower() == tag_name.lower():
+                return tag
+        return None
